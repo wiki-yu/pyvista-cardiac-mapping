@@ -7,17 +7,25 @@ from surface import extract_surface_data, empty_fields
 from electric import extract_electric_data, empty_electric
 from ablation import extract_ablation_data, empty_ablation
 
+
 def _decode_tags(arr):
     """
     Convert empty arrays into empty strings. Leave strings unchanged.
     """
-    return np.asarray([item if isinstance(item, str) else item.tobytes().decode('utf-16') for item in arr])
+    return np.asarray(
+        [
+            item if isinstance(item, str) else item.tobytes().decode("utf-16")
+            for item in arr
+        ]
+    )
+
 
 def _cast_to_float(arr):
     """
     Cast a numpy array to float.
     """
     return [a.astype(float) if isinstance(a, np.ndarray) else a for a in arr]
+
 
 def _load_mat_below_v73(filename):
     """
@@ -32,35 +40,40 @@ def _load_mat_below_v73(filename):
         struct_as_record=False,
         squeeze_me=True,
         simplify_cells=True,
-    )['userdata']
+    )["userdata"]
 
-    data['electric']['tags'] = _decode_tags(data['electric']['tags'])
+    data["electric"]["tags"] = _decode_tags(data["electric"]["tags"])
 
-    data['electric']['impedances']['time'] = _cast_to_float(data['electric']['impedances']['time'])
-    data['electric']['impedances']['value'] = _cast_to_float(data['electric']['impedances']['value'])
+    data["electric"]["impedances"]["time"] = _cast_to_float(
+        data["electric"]["impedances"]["time"]
+    )
+    data["electric"]["impedances"]["value"] = _cast_to_float(
+        data["electric"]["impedances"]["value"]
+    )
 
     try:
         # this will only exist if triRep is a struct, not TriRep or Triangulation object
-        data['surface']['triRep']['Triangulation']
-        
+        data["surface"]["triRep"]["Triangulation"]
+
     except ValueError as e:
-        
-        if str(e) != 'no field of name Triangulation':
+
+        if str(e) != "no field of name Triangulation":
             raise e
         else:
-            message = 'MATLAB classes cannot be read'
+            message = "MATLAB classes cannot be read"
             raise TypeError(message) from e
 
     # rfindex is a matlab class - not readable with Python
-    data.pop('rfindex', None)
+    data.pop("rfindex", None)
 
     return data
+
 
 def _load_mat(filename):
     """Load a MATLAB file."""
     data = _load_mat_below_v73(filename)
     # These are indices
-    data['surface']['triRep']['Triangulation'] -= 1
+    data["surface"]["triRep"]["Triangulation"] -= 1
 
     return data
 
@@ -69,7 +82,7 @@ def load_dataset_mat(filename, name=None):
     """
     Load a Case object from a MATLAB file.
     Args:
-        filename (str): path to MATLAB file to be loaded 
+        filename (str): path to MATLAB file to be loaded
         name (str): name to give this dataset. The default is `None`
     Returns:
         points: the 3D vertices
@@ -81,18 +94,28 @@ def load_dataset_mat(filename, name=None):
     if name is None:
         name = os.path.basename(filename)
 
-    points, indices, fields = extract_surface_data(data['surface'])
-    electric = extract_electric_data(data['electric'])
-    ablation = extract_ablation_data(data['rf']) if 'rf' in data else None
-        
+    points, indices, fields = extract_surface_data(data["surface"])
+    electric = extract_electric_data(data["electric"])
+    ablation = extract_ablation_data(data["rf"]) if "rf" in data else None
+
     print("name: ", name)
-    print("points: ", np.shape(points))
-    print("indices: ", indices)
-    print("indicesn shape: {} max: {} min: {} ".format(np.shape(indices), np.max(indices), np.min(indices)))
+    print("########### Surface info ############")
+    print("points shape: ", np.shape(points))
+    print("points: ", points)
+    # print("indices: ", indices)
+    print(
+        "indices shape: {} max: {} min: {} ".format(
+            np.shape(indices), np.max(indices), np.min(indices)
+        )
+    )
     print("fields: ", fields)
 
+    print("*********** Electric info ***********")
+    print(electric.bipolar_egm.points)
+    print(type(electric.bipolar_egm.points))
 
-    return points, indices, fields
+    return points, indices, fields, electric
+
 
 def create_mesh(points, indices):
     """
@@ -103,8 +126,12 @@ def create_mesh(points, indices):
         indices (np.ndarray): array of the indices of the faces
     """
     # indices = self.indices  # (16942, 3) faces with vertices index
-    num_points_per_face = np.full(shape=(len(indices)), fill_value=3, dtype=int)  # all faces have three vertices
-    faces = np.concatenate([num_points_per_face[:, np.newaxis], indices], axis=1)  # faces with number of vertices
+    num_points_per_face = np.full(
+        shape=(len(indices)), fill_value=3, dtype=int
+    )  # all faces have three vertices
+    faces = np.concatenate(
+        [num_points_per_face[:, np.newaxis], indices], axis=1
+    )  # faces with number of vertices
     arr_points = np.array(points)
     arr_meshes = faces
 
@@ -113,13 +140,14 @@ def create_mesh(points, indices):
     # mesh = pyvista.PolyData(self.points.copy())
     return mesh
 
+
 def draw_map(mesh, **kwargs):
     """
     Function for drawing the map
 
     Args:
         mesh: the mesh for 3D reconstruction
-        field: the bi-voltage values contained 
+        field: the bi-voltage values contained
     """
     plotter = pyvista.Plotter()
     # Create default settings for the plot scalar
@@ -140,7 +168,7 @@ def draw_map(mesh, **kwargs):
     default_add_mesh_kws = {
         "style": "surface",
         "show_edges": False,
-        # "smooth_shading": True,  
+        # "smooth_shading": True,
         "annotations": False,
         "cmap": matplotlib.cm.jet_r,
         # "cmap": ['green', 'red'],
@@ -166,5 +194,5 @@ def draw_map(mesh, **kwargs):
             mesh=mesh,
             **default_add_mesh_kws,
         )
-    # plotter.smooth()  
+    # plotter.smooth()
     return plotter
