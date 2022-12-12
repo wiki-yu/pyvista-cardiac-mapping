@@ -1,9 +1,9 @@
 import pyvista
 import numpy as np
-import json
 from reader import load_dataset_mat, create_mesh, draw_map
 import matplotlib.pyplot as plt
 import math
+import pandas as pd
 
 
 def main():
@@ -15,46 +15,58 @@ def main():
     filename = "./data/dataset_1.mat"
     points, indices, fields, electric = load_dataset_mat(filename)
 
-    # Creating mesh
-    mesh = create_mesh(points, indices)
-    vertices = mesh.points
-    faces = mesh.faces
-    voltage = [0 if math.isnan(x) else x for x in fields.bipolar_voltage]
+    # # # Creating mesh
+    # # mesh = create_mesh(points, indices)
+    # # vertices = mesh.points
+    # # faces = mesh.faces
+    # # voltage = [0 if math.isnan(x) else x for x in fields.bipolar_voltage]
 
-    ## Plot the points cloud
-    cloud = pyvista.PolyData(vertices)
-    cloud["point_color"] = cloud.points[:, 2]  # just use z coordinate
-    pyvista.plot(cloud, scalars="point_color", cmap="jet", show_bounds=True, cpos="yz")
+    # ## Plot the points cloud
+    # cloud = pyvista.PolyData(points)
+    # cloud["point_color"] = cloud.points[:, 2]  # just use z coordinate
+    # pyvista.plot(cloud, scalars="point_color", cmap="jet", show_bounds=True, cpos="yz")
 
-    # 3D points VS mapping points
-    pl = pyvista.Plotter()
-    pl.add_points(points, render_points_as_spheres=True, point_size=5.0, color="red")
+    # # 3D points VS mapping points
+    # pl = pyvista.Plotter()
+    # pl.add_points(points, render_points_as_spheres=True, point_size=5.0, color="red")
 
-    mapping_points = electric.bipolar_egm.points
-    pl.add_points(
-        mapping_points,
-        render_points_as_spheres=True,
-        point_size=5.0,
-        color="yellow",
-    )
-    pl.show()
+    # mapping_points = electric.bipolar_egm.points
+    # pl.add_points(
+    #     mapping_points,
+    #     render_points_as_spheres=True,
+    #     point_size=5.0,
+    #     color="yellow",
+    # )
+    # pl.show()
 
-    # ## Read the electric signals
-    # biploar_egm = electric.bipolar_egm.egm
-    # ref_egm = electric.reference_egm.egm
-    # ecg = electric.ecg.ecg
-    # print(np.shape(biploar_egm[0]), np.shape(ref_egm[0]), np.shape(ecg[0]))
-    # plt.figure(figsize=(15, 7))
-    # plt.subplot(3, 1, 1)
-    # plt.title("Bipolar egm")
-    # plt.plot(biploar_egm[0])
-    # plt.subplot(3, 1, 2)
-    # plt.title("Reference egm")
-    # plt.plot(ref_egm[0])
-    # plt.subplot(3, 1, 3)
-    # plt.title("Surface ECG")
-    # plt.plot(ecg[0])
-    # plt.show()
+    ## Read the electric signals
+    biploar_egm = electric.bipolar_egm.egm
+    ref_egm = electric.reference_egm.egm
+    ecg = electric.ecg.ecg
+    print(np.shape(biploar_egm[0]), np.shape(ref_egm[0]), np.shape(ecg[0]))
+    plt.figure(figsize=(15, 7))
+    plt.subplot(3, 1, 1)
+    plt.title("Bipolar egm")
+    plt.plot(biploar_egm[10])
+    plt.subplot(3, 1, 2)
+    plt.title("Reference egm")
+    plt.plot(ref_egm[10])
+    plt.subplot(3, 1, 3)
+    plt.title("Surface ECG")
+    plt.plot(ecg[10])
+    plt.show()
+    print("***************************************************")
+    print(len(electric.annotations.local_activation_time))
+    df = pd.DataFrame(electric.annotations.local_activation_time)
+    print(df.describe())
+    print("***************************************************")
+    pos_lat = [val for val in electric.annotations.local_activation_time if val > 0]
+    df2 = pd.DataFrame(pos_lat)
+    print(df2.describe())
+
+    # pos_lat = [val for val in fields.local_activation_time if val > 0]
+    # df3 = pd.DataFrame(pos_lat)
+    # print(df3.describe())
 
     # Tim's dataset
     # f_points= open("../data/test_surface_mesh.json", "r")

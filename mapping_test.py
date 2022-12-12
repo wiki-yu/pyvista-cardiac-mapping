@@ -15,7 +15,7 @@ def main():
 
     # 3D points VS mapping points
     pl = pyvista.Plotter()
-    # pl.add_points(points, render_points_as_spheres=True, point_size=5.0, color="red")
+    pl.add_points(points, render_points_as_spheres=True, point_size=5.0, color="red")
 
     mapping_points = electric.bipolar_egm.points
     print("type mapping points: ", type(mapping_points))
