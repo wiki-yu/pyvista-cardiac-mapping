@@ -15,8 +15,9 @@ def main():
 
     # 3D points VS mapping points
     pl = pyvista.Plotter()
-    pl.add_points(points, render_points_as_spheres=True, point_size=5.0, color="red")
+    pl.add_points(points, render_points_as_spheres=True, point_size=5.0, color="white")
 
+    # Mapping points coords
     mapping_points = electric.bipolar_egm.points
     print("type mapping points: ", type(mapping_points))
 
@@ -37,10 +38,18 @@ def main():
         np.array(proj_points),
         render_points_as_spheres=True,
         point_size=5.0,
-        color="white",
+        color="red",
     )
 
-    pl.show()
+    # pl.show()
+    # print("projected points: ", proj_points)
+    # print("surface 3d points: ", points)
+
+    for p in proj_points:
+        if p in points:
+            print("True")
+        else:
+            print("no")
 
 
 if __name__ == "__main__":

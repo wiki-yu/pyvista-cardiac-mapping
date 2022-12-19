@@ -101,7 +101,7 @@ def load_dataset_mat(filename, name=None):
     print("name: ", name)
     print("########### Surface info ############")
     print("points shape: ", np.shape(points))
-    print("points: ", points)
+    # print("points: ", points)
     # print("indices: ", indices)
     print(
         "indices shape: {} max: {} min: {} ".format(
@@ -111,8 +111,9 @@ def load_dataset_mat(filename, name=None):
     print("fields: ", fields)
 
     print("*********** Electric info ***********")
-    print(electric.bipolar_egm.points)
-    print(type(electric.bipolar_egm.points))
+    print("Mapping points: ", len(electric.bipolar_egm.points))
+    # print(electric.bipolar_egm.points)
+    # print(type(electric.bipolar_egm.points))
 
     return points, indices, fields, electric
 
@@ -172,13 +173,47 @@ def draw_map(mesh, **kwargs):
         "annotations": False,
         "cmap": matplotlib.cm.jet_r,
         # "cmap": ['green', 'red'],
-        "clim": (0, 2),
+        "clim": (30, 120),
         "above_color": "magenta",
         "below_color": "brown",
         "nan_color": "gray",
         "name": "mesh",
         "opacity": 1.0,
     }
+
+
+    if "field_type" in kwargs:
+        field_type = kwargs.get("field_type")
+        if field_type == "voltage":
+            default_add_mesh_kws = {
+                "style": "surface",
+                "show_edges": False,
+                # "smooth_shading": True,
+                "annotations": False,
+                "cmap": matplotlib.cm.jet_r,
+                # "cmap": ['green', 'red'],
+                "clim": (0, 2),
+                "above_color": "magenta",
+                "below_color": "brown",
+                "nan_color": "gray",
+                "name": "mesh",
+                "opacity": 1.0,
+            }
+        else:
+            default_add_mesh_kws = {
+                "style": "surface",
+                "show_edges": False,
+                # "smooth_shading": True,
+                "annotations": False,
+                "cmap": matplotlib.cm.jet_r,
+                # "cmap": ['green', 'red'],
+                "clim": (30, 120),
+                "above_color": "magenta",
+                "below_color": "brown",
+                "nan_color": "gray",
+                "name": "mesh",
+                "opacity": 1.0,
+            }
 
     default_add_mesh_kws["scalar_bar_args"] = default_scalar_bar_args
 

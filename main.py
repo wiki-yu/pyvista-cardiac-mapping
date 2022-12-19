@@ -55,18 +55,18 @@ def main():
     plt.title("Surface ECG")
     plt.plot(ecg[10])
     plt.show()
-    print("***************************************************")
+    print("### electric.annotations.local_activation_time")
     print(len(electric.annotations.local_activation_time))
     df = pd.DataFrame(electric.annotations.local_activation_time)
     print(df.describe())
-    print("***************************************************")
+    print("*** electric.annotations.local_activation_time > 0")
     pos_lat = [val for val in electric.annotations.local_activation_time if val > 0]
     df2 = pd.DataFrame(pos_lat)
     print(df2.describe())
-
-    # pos_lat = [val for val in fields.local_activation_time if val > 0]
-    # df3 = pd.DataFrame(pos_lat)
-    # print(df3.describe())
+    print("@@@ surface.local_activation_time")
+    pos_lat = [val for val in fields.local_activation_time if val > 0]
+    df3 = pd.DataFrame(pos_lat)
+    print(df3.describe())
 
     # Tim's dataset
     # f_points= open("../data/test_surface_mesh.json", "r")
