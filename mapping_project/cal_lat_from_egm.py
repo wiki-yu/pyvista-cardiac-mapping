@@ -5,7 +5,7 @@ from utils import interpolators
 import matplotlib.pyplot as plt
 
 
-def get_sample_indices_within_woi(electric, buffer=50, indices=None):
+def get_sample_indices_within_woi(electric, buffer=50):
     """
     Determine which samples are within the window of interest for each electrogram.
     """
@@ -24,17 +24,19 @@ def get_sample_indices_within_woi(electric, buffer=50, indices=None):
 
 
 def calculate_lat_from_electrograms(electric, buffer=50, bipolar=True, indices=None):
+    """
+    Calculates LAT from electrograms with the info of WOI and ref.
+    """
+
     electrograms = electric.bipolar_egm.egm.copy()
     print("### Length of electrograms: ", len(electrograms))
-    sample_within_woi = get_sample_indices_within_woi(
-        electric, buffer=buffer, indices=indices
-    )
+
+    sample_within_woi = get_sample_indices_within_woi(electric, buffer=buffer)
     print("### Length of sample_within_woi ", sample_within_woi.shape)
-    # plt.figure(figsize=(20, 8))
-    # plt.plot(electrograms[0])
-    # plt.show()
+
     electrograms[~sample_within_woi] = 0
     max_idx = np.argmax(electrograms, axis=1)
+
     # print("max index: ", max_idx)
     # original = electric.annotations.local_activation_time
     # original = [i if i >0 else 2000 for i in original]

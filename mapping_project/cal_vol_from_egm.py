@@ -5,39 +5,14 @@ from utils import interpolators
 import matplotlib.pyplot as plt
 
 
-def get_sample_indices_within_woi(electric, buffer=50, indices=None):
+def get_sample_indices_within_woi(electric, buffer=50):
     """
     Determine which samples are within the window of interest for each electrogram.
 
-    Can be used to obtain a two-dimensional boolean array in which value of True indicate
-    that the specific sample is within the specific electrogram's window of
-    interest.
-
-    Args:
-        case (Case): openep case object
-        buffer (float): times within the window of interest plus/minus this buffer
-            time will be considered to be within the woi.
-        indices (np.ndarray, optional)
-
-    Returns:
-        within_woi (ndarray): 2D boolean array of shape (N_electrograms, N_samples).
-            Values of True indicate that the sample if within the electrogram's
-            window of interest.
     """
-
-    # if we have a single index we need to ensure it is an array
-    indices = np.asarray([indices], dtype=int) if isinstance(indices, int) else indices
-
-    if indices is None:
-        egm = electric.bipolar_egm.egm
-        woi = electric.annotations.window_of_interest
-        ref_annotations = electric.annotations.reference_activation_time[:, np.newaxis]
-    else:
-        egm = electric.bipolar_egm.egm[indices]
-        woi = electric.annotations.window_of_interest[indices]
-        ref_annotations = electric.annotations.reference_activation_time[
-            indices, np.newaxis
-        ]
+    egm = electric.bipolar_egm.egm
+    woi = electric.annotations.window_of_interest
+    ref_annotations = electric.annotations.reference_activation_time[:, np.newaxis]
 
     sample_indices = np.full_like(egm, fill_value=np.arange(egm.shape[1]), dtype=int)
     start_time, stop_time = (woi + ref_annotations + [-buffer, buffer]).T
@@ -55,39 +30,20 @@ def calculate_voltage_from_electrograms(
 ):
     """
     Calculates the peak-to-peak voltage from electrograms.
-    For each mapping point, the voltage will be calculated as the
-    amplitude of its corresponding electrogram during the window of interest.
-    Args:
-        electric: electric signals of the mapping points
-        buffer (float): Amplitudes will be calculated using the window of interest plus/minus this buffer time.
-        bipolar (bool, optional): If True, the bipolar voltages will calculated, otherwise unipolar voltages.
-    Returns:
-        voltages (ndarray): Bipolar voltages
     """
 
-    # if we have a single index we need to ensure it is an array
-    indices = np.asarray([indices], dtype=int) if isinstance(indices, int) else indices
-
     if bipolar:
-        electrograms = (
-            electric.bipolar_egm.egm.copy()
-            if indices is None
-            else electric.bipolar_egm.egm[indices].copy()
-        )
+        electrograms = electric.bipolar_egm.egm.copy()
     else:
+        # Unipolar case, Dont need it for now
         # Use only the proximal unipolar data
-        electrograms = (
-            electric.unipolar_egm.egm[:, :, 0].copy()
-            if indices is None
-            else electric.unipolar_egm.egm[indices, :, 0].copy()
-        )
-
+        electrograms = electric.unipolar_egm.egm[:, :, 0].copy()
     print("### Length of electrograms: ", len(electrograms))
-    sample_within_woi = get_sample_indices_within_woi(
-        electric, buffer=buffer, indices=indices
-    )
+
+    sample_within_woi = get_sample_indices_within_woi(electric, buffer=buffer)
     print("### Length of sample_within_woi ", sample_within_woi.shape)
     print(sample_within_woi)
+
     electrograms[~sample_within_woi] = np.NaN
 
     amplitudes = np.nanmax(electrograms, axis=1) - np.nanmin(electrograms, axis=1)
